@@ -39,3 +39,36 @@ public > temp > **.gitkeep** --- this will track now by git and also get pushed.
   }
 }
 ```
+
+7. Now, Create a folders in **src** - `controllers`, `db`, `models`, `routes`, `middlewares` and `utils`.
+
+8. For formatted code, please install **prettier as devdependencies** package.
+
+```bash
+npm i -D prettier
+```
+
+7. After that, Create a file named `.prettierrc`. i.e **.prettierrc**
+
+**.prettierrc code -**
+
+```javascript
+{
+  "singleQuote": false,
+  "bracketSpacing": true,
+  "tabWidth": 2,
+  "trailingComma": "es5",
+  "semi": true
+}
+```
+
+8. Create a file `.prettierignore` and put below lines.
+
+```bash
+*env
+.env
+env*
+node_modules
+/.vscode
+./dist
+```
