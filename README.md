@@ -471,3 +471,74 @@ export { asyncHandler };
 ```
 
 _Same for apiError.js, apiResponse.js_
+
+---
+
+### Creating User and video models.
+
+1. Create `user.model.js` inside models.
+
+_user.model.js_
+
+**Here, dont forget about 2nd object `timestamps:true`.**
+
+```javascript
+import mongoose, { Schema } from "mongoose";
+
+const userSchema = new Schema(
+  {
+    username: {
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+      trim: true,
+      index: true,
+    },
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+      trim: true,
+    },
+    fullName: {
+      type: String,
+      required: true,
+      trim: true,
+      index: true,
+    },
+    avatar: {
+      type: String, // cloudinary url
+      required: true,
+    },
+    coverImage: {
+      type: String, // cloudinary url
+    },
+    watchHistory: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "Video",
+      },
+    ],
+    password: {
+      type: String,
+      required: [true, "password is required."],
+    },
+    refreshToken: {
+      type: String,
+    },
+  },
+  { timestamps: true }
+);
+
+export const User = mongoose.model("User", userSchema);
+```
+
+_Same for videoSchema_
+
+1. Now install following packages.
+
+```bash
+npm install bcrypt jsonwebtoken mongoose-aggregate-paginate-v2
+```
