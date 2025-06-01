@@ -341,3 +341,133 @@ npm start
 ### App is running now..
 
 ---
+
+### Custom api and middlewares.
+
+1. In `app.js`, create express application and export it.
+
+_app.js_
+
+```javascript
+import express from "express";
+
+const app = express();
+
+export { app };
+```
+
+2. After this, we also have listen routes..??
+3. When db get connected, app should start listening. therefore, use `.then` and `.catch` to listen app after db connection method is called.
+
+_index.js_
+
+```javascript
+import dotenv from "dotenv";
+import connectToDB from "./db/connection.js";
+import { app } from "./app.js";
+
+// dotenv.config(); // i am confused whether we should we give path or not.
+
+dotenv.config({
+  path: "./env",
+});
+
+connectToDB()
+  .then(() => {
+    app.listen(process.env.PORT || 8000, () => {
+      console.log(`🚀Server running at port ${process.env.PORT}`);
+    });
+  })
+  .catch((err) => {
+    console.log("database connection failed :", err);
+  });
+```
+
+4. Install `cookie-parser` and `cors`.
+
+```bash
+npm install cookie-parser cors
+```
+
+- 🔁**cors – Cross-Origin Resource Sharing** - Allows your backend server (API) to accept requests from different origins (domains).**By default, browsers block cross-origin requests due to security reasons. If your frontend is on a different domain/port than your backend (like React on localhost:3000 and Express on localhost:5000), requests will fail unless you enable CORS.**
+
+```javascript
+import cors from "cors";
+
+app.use(cors());
+```
+
+- You can customize it.
+
+```javascript
+app.use(
+  cors({
+    origin: "http://localhost:3000", // allow only this frontend
+    credentials: true, // allow cookies to be sent
+  })
+);
+```
+
+- 🍪 **cookie-parser – Parsing Cookies in Request Headers** - Helps Express read and access cookies sent by the client (usually the browser).
+
+---
+
+#### Here, `app.use` are actually configuration statements.
+
+_app.js_
+
+```javascript
+import express from "express";
+import cors from "cors";
+import cookieParser from "cookie-parser";
+
+const app = express();
+
+app.use(
+  cors({
+    origin: process.env.CORS_ORIGIN,
+    credentials: true,
+  })
+);
+
+app.use(express.json({ limit: "16kb" })); // Allow express to take json data as well.
+
+app.use(express.urlencoded({ extended: true, limit: "16kb" })); // Allow express to encode the url. eg " " = %20 or +. @ = %40
+
+app.use(express.static("public")); // to store temp files on server. such files which are not imp.
+
+app.use(cookieParser()); // allow express to set and read client's browser cookies.
+
+export { app };
+```
+
+---
+
+**IMP NOTE -** When we talking to database, we are going to use **Async-await** and **try-catch**. but what if we create a utility file for this. so that we dont need to write those async/await format everytime.
+
+1. Create a file `asyncHandler.js` in **utils** folder.
+
+_asyncHandler.js_
+
+```javascript
+const asyncHandler = (requestHandler) => {
+  (req, res, next) => {
+    Promise.resolve(requestHandler(req, res, next)).catch((err) => next(err));
+  };
+};
+
+export { asyncHandler };
+
+// const asyncHandler = (func) => async (req, res, next) => {
+//   try {
+//     await func(req, res, next);
+//   } catch (error) {
+//     res.status(error.code || 400).json({
+//       success: false,  // for frontend developer
+//       message: error.message,
+//     });
+//   }
+// };
+```
+
+_Same for apiError.js, apiResponse.js_
