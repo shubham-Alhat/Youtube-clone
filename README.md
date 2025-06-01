@@ -238,3 +238,106 @@ npm install express dotenv mongoose
 
 - **Use `try-catch` in every DB code for error handling.**
 - **Use `Async-await` to avoid asynchronous tasks.**
+
+4. Connecting mongoDB yo our app. **(Not professional way)**
+
+- Here, we are using an **IIFE (Immediately Invoked Function Expression) with async to connect to MongoDB, which is perfectly fine..**
+
+_index.js_
+
+```javascript
+import mongoose from "mongoose";
+import { DB_NAME } from "./constants";
+
+(async () => {
+  try {
+    if (!process.env.MONGODB_URI) {
+      throw new Error("MONGODB_URI is not defined in environment variables");
+    }
+
+    await mongoose.connect(`${process.env.MONGODB_URI}/${DB_NAME}`);
+    console.log("MongoDB connected successfully");
+  } catch (error) {
+    console.log("MongoDB connection error:", error);
+    throw error;
+  }
+})();
+```
+
+5. Connecting using professional approach **(Recommended)**.
+
+- Create a folder `db`. In that folder, create a file name `connection.js`.
+
+_connection.js_
+
+```javascript
+import mongoose from "mongoose";
+import { DB_NAME } from "../constants";
+
+const connectToDB = async () => {
+  try {
+    const connectionInstance = await mongoose.connect(
+      `${process.env.MONGODB_URI}/${DB_NAME}`
+    );
+    console.log(
+      `\n database connected.. DB_HOST: ${connectionInstance.connection.host}`
+    );
+  } catch (error) {
+    console.log("MONGO_DB CONNECTION ERROR:", error);
+    process.exit(1); // to exit the process
+  }
+};
+
+export default connectToDB;
+```
+
+6. Now, In index.js and also, **we modify script in package.json file**.
+
+#### From this
+
+```json
+"start": "nodemon src/index.js"
+```
+
+#### To this
+
+```json
+"start": "nodemon -r dotenv/config --experimental-json-modules src/index.js"  // preloads environment variables
+```
+
+_index.js_
+
+```javascript
+import dotenv from "dotenv";
+import connectToDB from "./db/connection";
+
+// dotenv.config(); // i am confused whether we should we give path or not.
+
+dotenv.config({
+  path: "./env",
+});
+
+connectToDB();
+```
+
+---
+
+### Starting the app.
+
+1. Run following command to start app.
+
+```bash
+npm start
+```
+
+### 🚨 ERROR THROWS HERE ON TERMINAL DUE TO INVALID STRING.
+
+- My password contains '**@**' which conflict with mongodb url and error occured. **I converted `@` into `%40`**
+
+- Also, while importing files. use `.js` extension as well.
+
+---
+
+### App is running now..
+
+---
