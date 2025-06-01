@@ -219,7 +219,7 @@ You’re now ready to:
 
 ```env
 PORT=8000
-MONGO_URI=mongodb+srv://youruser:yourpass@cluster0.xxxxxx.mongodb.net/?retryWrites=true&w=majority
+MONGO_URI=mongodb+srv://youruser:yourpass@cluster0.xxxxxx.mongodb.net
 ```
 
 2. In `constants.js`, define you database name.
