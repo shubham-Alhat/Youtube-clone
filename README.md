@@ -542,3 +542,121 @@ _Same for videoSchema_
 ```bash
 npm install bcrypt jsonwebtoken mongoose-aggregate-paginate-v2
 ```
+
+_user.model.js_
+
+```javascript
+import mongoose, { Schema } from "mongoose";
+import jwt from "jsonwebtoken";
+import bcrypt from "bcrypt";
+
+const userSchema = new Schema(
+  {
+    username: {
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+      trim: true,
+      index: true,
+    },
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+      trim: true,
+    },
+    fullName: {
+      type: String,
+      required: true,
+      trim: true,
+      index: true,
+    },
+    avatar: {
+      type: String, // cloudinary url
+      required: true,
+    },
+    coverImage: {
+      type: String, // cloudinary url
+    },
+    watchHistory: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "Video",
+      },
+    ],
+    password: {
+      type: String,
+      required: [true, "password is required."],
+    },
+    refreshToken: {
+      type: String,
+    },
+  },
+  { timestamps: true }
+);
+
+// function that should run before saving into databse
+userSchema.pre("save", async function (next) {
+  if (!this.isModified("password")) return next(); // checks if password field is modified. here, this refer to userSchema.
+
+  this.password = await bcrypt.hash(this.password, 10);
+  next();
+});
+
+// here, we write custom methods for our user document. we created `isPasswordCorrect`
+userSchema.methods.isPasswordCorrect = async function (password) {
+  return await bcrypt.compare(password, this.password);
+}; // here it returns true or false
+
+// method for generate access token.
+userSchema.methods.generateAccessToken = function () {
+  return jwt.sign(
+    {
+      _id: this._id,
+      email: this.email,
+      username: this.username,
+      fullName: this.fullName,
+    },
+    process.env.ACCESS_TOKEN_SECRET,
+    {
+      expiresIn: process.env.ACCESS_TOKEN_EXPIRY,
+    }
+  );
+};
+
+// method for generating refresh token
+userSchema.methods.generateRefreshToken = function () {
+  return jwt.sign(
+    {
+      _id: this._id,
+    },
+    process.env.REFRESH_TOKEN_SECRET,
+    {
+      expiresIn: process.env.REFRESH_TOKEN_EXPIRY,
+    }
+  );
+};
+
+export const User = mongoose.model("User", userSchema);
+```
+
+**✅ if (!this.isModified("password")) return next();**
+
+`this` refers to the user document.
+
+`.isModified("password")` checks if the password field has been changed (for example, during sign-up or password update).
+
+If the password was not modified, the function ends early by calling `next()` (which continues saving without doing anything extra).
+
+🔸 This prevents hashing the password again if it’s already hashed.
+
+✅ userSchema.methods.isPasswordCorrect
+`userSchema.methods` is where you define custom functions (methods) for your user documents.
+
+You're creating a method called **isPasswordCorrect**.
+
+It can be used on any document created from the userSchema.
+
+Think of this like adding a new ability to your user objects.
