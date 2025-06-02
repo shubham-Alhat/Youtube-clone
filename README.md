@@ -828,3 +828,90 @@ export const upload = multer({ storage: storage });
 ### Here, we complete our 95% setup configuration. 😲
 
 ---
+
+### HTTP crash course.
+
+![alt text](image.png)
+
+---
+
+### How to write controllers.
+
+#### In this, we will be register the user.
+
+1. Create `user.controller.js` in **controller** folder.
+
+_user.controller.js_
+
+```javascript
+import asyncHandler from "../utils/asyncHandler.js";
+
+const registerUser = asyncHandler(async (req, res) => {
+  res.status(200).json({
+    message: "ok",
+  });
+});
+
+export { registerUser };
+```
+
+2. Create `user.routes.js` in **routes** folder.
+
+_user.routes.js_
+
+```javascript
+import { Router } from "express";
+
+const router = Router();
+
+export default router;
+```
+
+**Note -** We writes routes in `app.js`. where we will import this above two methods. i.e **router** and **registerUser**. Also those import statement are written after writing middlewares. **See the below code.**
+
+_app.js_
+
+```javascript
+import express from "express";
+import cors from "cors";
+import cookieParser from "cookie-parser";
+
+const app = express();
+
+app.use(
+  cors({
+    origin: process.env.CORS_ORIGIN,
+    credentials: true,
+  })
+);
+
+app.use(express.json({ limit: "16kb" })); // Allow express to take json data as well.
+
+app.use(express.urlencoded({ extended: true, limit: "16kb" })); // Allow express to encode the url. eg " " = %20 or +. @ = %40
+
+app.use(express.static("public")); // to store temp files on server. such files which are not imp.
+
+app.use(cookieParser()); // allow express to set and read client's browser cookies.
+
+// routes import
+import userRouter from "./routes/user.routes.js";
+
+// routes declaration
+app.use("/api/v1/users", userRouter);
+
+export { app };
+```
+
+_user.routes.js_
+
+```javascript
+import { Router } from "express";
+import { registerUser } from "../controllers/user.controller";
+
+const router = Router();
+
+router.route("/register").post(registerUser);
+router.route("/login").post(loginUser);
+
+export default router;
+```
