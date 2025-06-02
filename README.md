@@ -656,7 +656,175 @@ If the password was not modified, the function ends early by calling `next()` (w
 `userSchema.methods` is where you define custom functions (methods) for your user documents.
 
 You're creating a method called **isPasswordCorrect**.
-
 It can be used on any document created from the userSchema.
-
 Think of this like adding a new ability to your user objects.
+
+_video.model.js_
+
+```javascript
+import mongoose, { Schema } from "mongoose";
+import mongooseAggregatePaginate from "mongoose-aggregate-paginate-v2";
+
+const videoSchema = new Schema(
+  {
+    videoFile: {
+      type: String,
+      required: true,
+    },
+    thumbnail: {
+      type: String, // cloudinary url
+      required: true,
+    },
+    title: {
+      type: String,
+      required: true,
+    },
+    description: {
+      type: String,
+      required: true,
+    },
+    duration: {
+      type: Number, // from cloudinary
+      required: true,
+    },
+    views: {
+      type: Number,
+      default: 0,
+    },
+    isPublished: {
+      type: Boolean,
+      default: true,
+    },
+    owner: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+    },
+  },
+  { timestamps: true }
+);
+
+videoSchema.plugin(mongooseAggregatePaginate);
+
+export const Video = mongoose.model("Video", videoSchema);
+```
+
+---
+
+### File handling | multer
+
+Here, **file uploader will stand alone utility method. (we are going to create). reusable code for uploading avatar, video and files. also can be used as middleware wherever we need.**
+
+1. signup/login cloudinary.
+2. install cloudinary and multer
+
+```bash
+npm i cloudinary multer
+```
+
+---
+
+#### About multer | 📷 Real-life example
+
+1. Frontend form:
+
+```html
+<form action="/upload" method="POST" enctype="multipart/form-data">
+  <input type="file" name="photo" />
+  <button type="submit">Upload</button>
+</form>
+```
+
+2. Backend (Node.js/Express) with Multer:
+
+```javascript
+const express = require("express");
+const multer = require("multer");
+const app = express();
+
+// Use Multer to store files in a folder named "uploads"
+const upload = multer({ dest: "uploads/" });
+
+// Route to handle file upload
+app.post("/upload", upload.single("photo"), (req, res) => {
+  console.log(req.file); // ← Multer gives you the uploaded file here
+  res.send("File uploaded!");
+});
+```
+
+---
+
+1. Now while uploading and storing files. there are two steps to follow.
+
+- Taking file from `input-form` and storing it in our server **temporilary** using **multer.** here, we will use multer as **middleware**.
+- Uploading this file from **our server** to cloudinary.
+
+2. Create a file `cloudinary.js` in folder **utils**.
+3. take you api keys from site.
+
+_cloudinary.js_
+
+```javascript
+// Here, the file is already in our server and further code is written. In this we are uploading file in cloudinary from OUR SERVER.
+
+// Also Once we successfully uploaded file in cloudinary, we dont need file in OUR SERVER, so we have to remove it.
+
+import { v2 as cloudinary } from "cloudinary";
+import fs from "fs";
+
+// Configuration
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+const uploadOnCloudinary = async (localFilePath) => {
+  try {
+    // Check if localFilePath is there or not
+    if (!localFilePath) return null;
+
+    // upload file on cloudinary
+    const response = await cloudinary.uploader.upload(localFilePath, {
+      resource_type: "auto",
+    });
+
+    // file has uploaded successfully
+    console.log("file uploaded successfully on cloudinary", response.url);
+    return response;
+  } catch (error) {
+    fs.unlink(localFilePath); // remove the locally saved temporary file as the upload operation got failed.
+    return null;
+  }
+};
+
+export { uploadOnCloudinary };
+```
+
+---
+
+### Lets talk about middleware (basics)
+
+1. Create a file `multer.middleware.js` in `middlewares` folder.
+
+_multer.middleware.js_
+
+```javascript
+import multer from "multer";
+
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, "./public/temp");
+  },
+  filename: function (req, file, cb) {
+    cb(null, file.originalname);
+  },
+});
+
+export const upload = multer({ storage: storage });
+```
+
+---
+
+### Here, we complete our 95% setup configuration. 😲
+
+---
