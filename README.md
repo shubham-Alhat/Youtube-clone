@@ -919,3 +919,84 @@ export default router;
 ---
 
 ### We are tested our api (url) with postman
+
+---
+
+### Going to register user.
+
+#### Steps to follow to register user.
+
+1. Get user details from frontend - Here we will use **Postman** to get user data.
+2. Validation - Whether user send empty string and details.
+3. Check if user already exist - we will check by username and email.
+4. Check for images - check for avatar because it is must.
+5. If avatar and coverimage is available, **Store it in cloudinary**.
+6. Create user object - create entry in db.
+7. Remove password and refresh token field from response.
+8. Check for user creation.
+9. return response.
+
+### Explaination of how data get from frontend and recieve at backend.
+
+🧾 HTML Code Example (as you mentioned):
+
+```html
+<form action="http://localhost:3000/register" method="POST">
+  <input name="name" />
+  <input name="email" />
+  <input name="password" />
+  <button type="submit">Register</button>
+</form>
+```
+
+📦 What Happens After You Click “Register”?
+
+✅ Step 1: Browser Packs the Data (Form Submission)
+
+The browser sees method="POST" and action="http://localhost:3000/register".
+
+It collects all form fields that have a name attribute.
+
+Then it encodes the data using the `application/x-www-form-urlencoded` format by default.
+
+🧪 Example Output (What is sent):
+
+`name=Swayam&email=swayam%40gmail.com&password=12345`
+
+```bash
+name=Swayam&email=swayam%40gmail.com&password=12345
+```
+
+This is called URL-encoded data. It’s a string of `key=value&key2=value2....`
+
+✅ Step 3: Server Receives the Request
+
+Your Express.js backend receives the request at the route:
+
+```javascript
+app.post("/register", (req, res) => {
+  console.log(req.body); // ⬅️ you want this
+});
+```
+
+**BUT WAIT — you need middleware to decode the body first.**
+
+✅ Step 4: Body Parsing Middleware Decodes It
+
+**You need this middleware:**
+
+```javascript
+app.use(express.urlencoded({ extended: true }));
+```
+
+**This tells Express to read and parse the incoming URL-encoded string, and convert it into an object.**
+
+Now, req.body will look like:
+
+```json
+{
+  "name": "Swayam",
+  "email": "swayam@gmail.com",
+  "password": "12345"
+}
+```
