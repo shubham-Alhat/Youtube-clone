@@ -915,3 +915,7 @@ router.route("/login").post(loginUser);
 
 export default router;
 ```
+
+---
+
+### We are tested our api (url) with postman
