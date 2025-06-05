@@ -30,7 +30,16 @@ const registerUser = asyncHandler(async (req, res) => {
 
   // Now, firstly access images from fields
   const avatarLocalPath = req.files?.avatar[0]?.path;
-  const coverImageLocalPath = req.files?.coverImage[0]?.path;
+
+  // if user not upload coverImage
+  let coverImageLocalPath;
+  if (
+    req.files &&
+    Array.isArray(req.files.coverImage) &&
+    req.files.coverImage.length > 0
+  ) {
+    coverImageLocalPath = req.files.coverImage[0].path;
+  }
 
   // check if avatar is given or not (avatar is compulsory).
   if (!avatarLocalPath) {

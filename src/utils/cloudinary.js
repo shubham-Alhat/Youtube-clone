@@ -23,7 +23,10 @@ const uploadOnCloudinary = async (localFilePath) => {
     });
 
     // file has uploaded successfully
-    console.log("file uploaded successfully on cloudinary", response.url);
+    // console.log("file uploaded successfully on cloudinary", response.url);
+
+    // after uploading successfully, unlink the files fro server BEFORE MOVING FORWARD
+    fs.unlinkSync(localFilePath); // when uploaded then it will remove and when error occured then also. IMP thing is in public/temp/.gitkeep  this file actually imp for storing the tempory files.
     return response;
   } catch (error) {
     fs.unlink(localFilePath); // remove the locally saved temporary file as the upload operation got failed.

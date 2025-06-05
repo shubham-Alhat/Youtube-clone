@@ -831,7 +831,45 @@ export const upload = multer({ storage: storage });
 
 ### HTTP crash course.
 
-![alt text](image.png)
+#### HTTP Status Codes Overview
+
+#### Categories
+
+- **1xx** – Informational
+- **2xx** – Success
+- **3xx** – Redirection
+- **4xx** – Client Error
+- **5xx** – Server Error
+
+---
+
+#### 1xx – Informational
+
+- **100** Continue
+- **102** Processing
+
+#### 2xx – Success
+
+- **200** OK
+- **201** Created
+- **202** Accepted
+
+#### 3xx – Redirection
+
+- **307** Temporary Redirect
+- **308** Permanent Redirect
+
+#### 4xx – Client Error
+
+- **400** Bad Request
+- **401** Unauthorized
+- **402** Payment Required
+- **404** Not Found
+
+#### 5xx – Server Error
+
+- **500** Internal Server Error
+- **504** Gateway Timeout
 
 ---
 
@@ -1083,4 +1121,42 @@ const registerUser = asyncHandler(async (req, res) => {
 export { registerUser };
 ```
 
-_see tommorow_
+---
+
+### We have written user controller but now lets see whether it works or not.
+
+#### How to use Postman Un-professionally.
+
+1. We can use it previous way like below.
+
+- Paste the url which to test. like `http://localhost:8000/api/v1/users/register`.
+- Select the method (here we select **POST**).
+- Select `body`. In that, select raw and write data you want in obj form.
+
+```json
+{
+  "email": "shubham@gmail.com",
+  "password": "shubham292004"
+}
+```
+
+- Click **send**.
+- If you console log the data, see terminal, the data will be logged there.
+
+#### How to use Postman professionally.
+
+1. Open a new tab by pressing `+`.
+2. Paste the url like `http://localhost:8000/api/v1/users/register`.
+3. Select the method (here we select **POST**).
+4. Select `body`.
+5. In body, **Select the form-data**.
+6. Here, we have to write data in key-value pair.like `key:fullname` and `value:Shubham alhat`.etc...
+7. To upload **files**, select file type near `key` tab.
+
+---
+
+### How to setup Postman professionally
+
+#### Watch video title `How to use postman for backend` Time stamp at `30:09`.
+
+---
