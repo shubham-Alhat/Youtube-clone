@@ -4,6 +4,17 @@ import { User } from "../models/user.model.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import { ApiResponse } from "../utils/apiResponse.js";
 
+// -----  steps for registering user  ------
+// Get user details from frontend - Here we will use Postman to get user data.
+// Validation - Whether user send empty string and details.
+// Check if user already exist - we will check by username and email.
+// Check for images - check for avatar because it is must.
+// If avatar and coverimage is available, Store it in cloudinary.
+// Create user object - create entry in db.
+// Remove password and refresh token field from response.
+// Check for user creation.
+// return response.
+
 const registerUser = asyncHandler(async (req, res) => {
   // 1. get user details from frontend
   // when data is coming through form submisttion or direct json, we get data from req.body
@@ -83,4 +94,60 @@ const registerUser = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, createdUser, "User register successfully"));
 });
 
-export { registerUser };
+// Login the user
+
+// 1. Get data from req.body - email/username and password
+// 2. username and email
+// 3. find the user
+// 4. if found, check password
+// 5. Generate access and refresh token
+// 6. Send them in cookies
+
+const loginUser = asyncHandler(async (req, res) => {
+  // Get data from req.body
+  const { email, username, password } = req.body;
+
+  // check if user give email and password both
+  if (!email || !username) {
+    throw new ApiError(400, "username or email both is required");
+  }
+
+  // find the user
+  const user = await User.findOne({
+    // This checks if username OR email exist
+    $or: [{ username }, { email }],
+  });
+
+  // if not found, throw error that user was never registered
+  if (!user) {
+    throw new ApiError(404, "user does not exist");
+  }
+
+  // check if password is right
+  const isPasswordValid = await user.isPasswordCorrect(password);
+
+  if (!isPasswordValid) {
+    throw new ApiError(401, "invalid user credentials");
+  }
+
+  // generate access and refresh token
+  const generateAccessAndRefreshToken = async (userId) => {
+    try {
+      // find user by id
+      const user = await User.findById(userId);
+
+      // generate tokens here
+      const accessToken = user.generateAccessToken();
+      const refreshToken = user.generateRefreshToken();
+
+      // store refresh token in database
+    } catch (error) {
+      throw new ApiError(
+        500,
+        "something went wrong while generating access and refresh token"
+      );
+    }
+  };
+});
+
+export { registerUser, loginUser };
