@@ -1000,3 +1000,5 @@ Now, req.body will look like:
   "password": "12345"
 }
 ```
+
+**Now, in user.controller.js**
