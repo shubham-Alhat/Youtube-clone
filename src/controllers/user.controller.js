@@ -4,6 +4,32 @@ import { User } from "../models/user.model.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import { ApiResponse } from "../utils/apiResponse.js";
 
+// generate access and refresh token method
+const generateAccessAndRefreshToken = async (userId) => {
+  try {
+    // find user by id
+    const user = await User.findById(userId);
+
+    // generate tokens here
+    const accessToken = user.generateAccessToken();
+    const refreshToken = user.generateRefreshToken();
+
+    // store refresh token in database
+    user.refreshToken = refreshToken;
+    // This is an option "validateBeforeSave:false" passed to save() to tell Mongoose NOT to run schema validations before saving.
+    // “Save this user without checking all validation rules. Just save what I changed.”
+    await user.save({ validateBeforeSave: false });
+
+    // return access and refresh token
+    return { refreshToken, accessToken };
+  } catch (error) {
+    throw new ApiError(
+      500,
+      "something went wrong while generating access and refresh token"
+    );
+  }
+};
+
 // -----  steps for registering user  ------
 // Get user details from frontend - Here we will use Postman to get user data.
 // Validation - Whether user send empty string and details.
@@ -95,7 +121,6 @@ const registerUser = asyncHandler(async (req, res) => {
 });
 
 // Login the user
-
 // 1. Get data from req.body - email/username and password
 // 2. username and email
 // 3. find the user
@@ -130,24 +155,39 @@ const loginUser = asyncHandler(async (req, res) => {
     throw new ApiError(401, "invalid user credentials");
   }
 
-  // generate access and refresh token
-  const generateAccessAndRefreshToken = async (userId) => {
-    try {
-      // find user by id
-      const user = await User.findById(userId);
+  // Generate access and refresh token
+  const { accessToken, refreshToken } = await generateAccessAndRefreshToken(
+    user._id
+  );
 
-      // generate tokens here
-      const accessToken = user.generateAccessToken();
-      const refreshToken = user.generateRefreshToken();
+  // What data want to send to user (OPTIONAL STEPS) -------
+  const loggedInUser = await User.findById(user._id).select(
+    "-password -refreshToken"
+  );
 
-      // store refresh token in database
-    } catch (error) {
-      throw new ApiError(
-        500,
-        "something went wrong while generating access and refresh token"
-      );
-    }
+  // Send them in cookies
+
+  // our cookies can modify by frontend as well. so this options ensure that cookie only modified by backend
+  const options = {
+    httpOnly: true,
+    secure: true,
   };
+
+  return res
+    .status(200)
+    .cookie("accessToken", accessToken, options)
+    .cookie("refreshToken", refreshToken, options)
+    .json(
+      new ApiResponse(
+        200,
+        {
+          user: loggedInUser,
+          accessToken,
+          refreshToken,
+        },
+        "User logged In Successfully"
+      )
+    );
 });
 
 export { registerUser, loginUser };
