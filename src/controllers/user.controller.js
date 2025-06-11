@@ -3,6 +3,7 @@ import { ApiError } from "../utils/apiError.js";
 import { User } from "../models/user.model.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import { ApiResponse } from "../utils/apiResponse.js";
+import jwt from "jsonwebtoken";
 
 // generate access and refresh token method
 const generateAccessAndRefreshToken = async (userId) => {
@@ -220,6 +221,23 @@ const logoutUser = asyncHandler(async (req, res) => {
     .clearCookie("accessToken", options)
     .clearCookie("refreshToken", options)
     .json(new ApiResponse(200, {}, "User Logged Out"));
+});
+
+// here, login user via refresh token.
+// this refresh token, we will get these from cookies when user hit any api endpoint.
+// when we get refresh token from cookies, we will check it in database.(i think so)
+
+const refreshAccessToken = asyncHandler(async (req, res) => {
+  // here, if user on mobile phone, req.body.refreshToken otherwise we use req.cookies.refreshToken
+  const incomingRefreshToken =
+    req.cookies.refreshToken || req.body.refreshToken;
+
+  // if refresh token not found or not correct, user is unauthorized.
+  if (!incomingRefreshToken) {
+    throw new ApiError(401, "Unauthorized request");
+  }
+
+  // verify the refresh token
 });
 
 export { registerUser, loginUser, logoutUser };

@@ -1430,3 +1430,7 @@ export const verifyJWT = asyncHandler(async (req, res, next) => {
   }
 });
 ```
+
+### Talk about access and refresh token in context with frontend.
+
+**15:00 - 30:07** -- verify refresh token
