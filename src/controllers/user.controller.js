@@ -132,9 +132,12 @@ const loginUser = asyncHandler(async (req, res) => {
   // Get data from req.body
   const { email, username, password } = req.body;
 
+  // user should give us either username or email and we need compulsory password.
+  // here, email and username will act as identifier.
+  // here password is compulsory
   // check if user give email and password both
-  if (!email || !username) {
-    throw new ApiError(400, "username or email both is required");
+  if (!(email || username)) {
+    throw new ApiError(400, "username or email is required");
   }
 
   // find the user
@@ -205,11 +208,13 @@ const logoutUser = asyncHandler(async (req, res) => {
     }
   );
 
+  // Set cookie options
   const options = {
     httpOnly: true,
     secure: true,
   };
 
+  // Clear cookies and send response
   return res
     .status(200)
     .clearCookie("accessToken", options)
