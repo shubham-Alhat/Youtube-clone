@@ -223,7 +223,7 @@ const logoutUser = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, {}, "User Logged Out"));
 });
 
-// here, login user via refresh token.
+// here, login the user via refresh token.
 // this refresh token, we will get these from cookies when user hit any api endpoint.
 // when we get refresh token from cookies, we will check it in database.(i think so)
 
@@ -238,6 +238,54 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
   }
 
   // verify the refresh token
+  // write it in try-catch
+
+  try {
+    const decodedToken = jwt.verify(
+      incomingRefreshToken,
+      process.env.REFRESH_TOKEN_SECRET
+    );
+
+    // get user from _id get from decodedToken
+    const user = await User.findById(decodedToken?._id);
+
+    // what if user did not get i.e wrong token
+    if (!user) {
+      throw new ApiError(401, "Invalid refresh token");
+    }
+
+    // check/match the incomingRefreshToken sent by user with refreshToken which is in db.
+    if (incomingRefreshToken !== user.refreshToken) {
+      throw new ApiError(401, "Refresh token is expired or used.");
+    }
+
+    // okay, now all verification is done. now generate new refreshToken for user.
+    // Use above function
+    // we need to send them in cookies, so options will be there.
+    const options = {
+      httpOnly: true,
+      secure: true,
+    };
+
+    // Now generate refresh token
+    const { accessToken, newRefreshToken } =
+      await generateAccessAndRefreshToken(user._id);
+
+    // send response
+    return res
+      .status(200)
+      .cookie("accessToken", accessToken, options)
+      .cookie("refreshToken", newRefreshToken, options)
+      .json(
+        new ApiResponse(
+          200,
+          { accessToken, refreshToken: newRefreshToken },
+          "Accessed token refreshed"
+        )
+      );
+  } catch (error) {
+    throw new ApiError(401, error?.message || "Invalid refresh token");
+  }
 });
 
-export { registerUser, loginUser, logoutUser };
+export { registerUser, loginUser, logoutUser, refreshAccessToken };
