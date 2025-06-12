@@ -288,4 +288,22 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
   }
 });
 
+// user can change pasword
+const changeCurrentPassword = asyncHandler(async (req, res) => {
+  // here user is loggedIn : because of auth.middleware
+  const { oldPassword, newPassword } = req.body;
+
+  // we can access user from req.user as in auth middleware, we inject user in req
+  const user = await User.findById(req.user?._id);
+
+  const isPasswordCorrect = await user.isPasswordCorrect(oldPassword);
+
+  if (!isPasswordCorrect) {
+    throw new ApiError(400, "Invalid old password.");
+  }
+
+  user.password = newPassword;
+  await user.save({ validateBeforeSave: false });
+});
+
 export { registerUser, loginUser, logoutUser, refreshAccessToken };

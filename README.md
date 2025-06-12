@@ -1432,3 +1432,7 @@ export const verifyJWT = asyncHandler(async (req, res, next) => {
 ```
 
 ### Talk about access and refresh token in context with frontend.
+
+_In user.controller.js_
+
+**17:00 - 43:14**
