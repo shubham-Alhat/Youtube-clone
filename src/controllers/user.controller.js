@@ -410,6 +410,87 @@ const updateUserCoverImage = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, user, "Cover image updated successfully"));
 });
 
+// mongoDb aggregation
+const getUserChannelProfile = asyncHandler(async (req, res) => {
+  const { username } = req.params;
+
+  if (!username?.trim()) {
+    throw new ApiError(400, "Username from param is not found!!");
+  }
+
+  // here we get to know that username is present
+  // here instead of finding document first and then put aggregation, we will directly have aggregation pipeline code.
+
+  const channel = await User.aggregate([
+    // first pipeline
+    {
+      $match: {
+        username: username?.toLowerCase(), // here, we will get one document that goes to next stage.
+      },
+    },
+    // second pipeline - find subscribers of user
+    {
+      $lookup: {
+        from: "subscriptions", // here do you remember that mongoDB convert model name like this --> "Subscription" to "subscriptions"
+        localField: "_id",
+        foreignField: "channel",
+        as: "subscribers",
+      },
+    },
+    // third pipeline - find channels i.e to whom user subscribed
+    {
+      $lookup: {
+        from: "subscriptions", // here do you remember that mongoDB convert model name like this --> "Subscription" to "subscriptions"
+        localField: "_id",
+        foreignField: "subscriber",
+        as: "subscribedTo",
+      },
+    },
+    // fourth pipeline - adding extra fields in document
+    {
+      $addFields: {
+        subscribersCount: {
+          $size: "$subscribers", // here it have "$" sign at begining
+        },
+        channelsSubscribedToCount: {
+          $size: "$subscribedTo",
+        },
+        isSubscribed: {
+          $cond: {
+            if: { $in: [req.user?._id, "$subscribers.subscriber"] },
+            then: true,
+            else: false,
+          },
+        },
+      },
+    },
+    // fifth pipeline - sending essential data to frontend using project
+    {
+      $project: {
+        fullName: 1,
+        username: 1,
+        subscribersCount: 1,
+        channelsSubscribedToCount: 1,
+        isSubscribed: 1,
+        avatar: 1,
+        coverImage: 1,
+        email: 1,
+      },
+    },
+  ]);
+
+  // check if channel is exist or not.
+  if (!channel?.length) {
+    throw new ApiError(404, "channel does not exist");
+  }
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200, channel[0], "User channel fetched successfully")
+    );
+});
+
 export {
   registerUser,
   loginUser,
@@ -420,4 +501,5 @@ export {
   updateAccountDetails,
   updateUserAvatar,
   updateUserCoverImage,
+  getUserChannelProfile,
 };

@@ -1435,4 +1435,8 @@ export const verifyJWT = asyncHandler(async (req, res, next) => {
 
 _In user.controller.js_
 
-**17:00 - 43:14**
+---
+
+### Aggregation pipelining video.
+
+#### What we basically going to do is joined the subscription schema to User schema - That's what aggregation pipeline means.
