@@ -1667,4 +1667,4 @@ So your response is just the list of **video objects**, each one looking somethi
 
 ---
 
-Let me know if you want me to draw this as a flow diagram or help build similar queries for playlists, comments, etc. You're building a real product — this knowledge is 🔥 asset for backend mastery.
+9:48
