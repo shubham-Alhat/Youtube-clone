@@ -4,6 +4,7 @@ import { User } from "../models/user.model.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import { ApiResponse } from "../utils/apiResponse.js";
 import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
 
 // generate access and refresh token method
 const generateAccessAndRefreshToken = async (userId) => {
@@ -491,6 +492,27 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
     );
 });
 
+// sub pipelining
+const getWatchHistory = asyncHandler(async (req, res) => {
+  const user = await User.aggregate([
+    {
+      $match: {
+        // _id: req.user._id -- ERROR WILL HAPPEN. watch video : How to write sub pipelines and routes (7:17 - 30:13)
+
+        _id: new mongoose.Types.ObjectId(req.user._id),
+      },
+    },
+    {
+      $lookup: {
+        from: "videos",
+        localField: "watchHistory",
+        foreignField: "_id",
+        as: "watchHistory",
+      },
+    },
+  ]);
+});
+
 export {
   registerUser,
   loginUser,
@@ -502,4 +524,5 @@ export {
   updateUserAvatar,
   updateUserCoverImage,
   getUserChannelProfile,
+  getWatchHistory,
 };

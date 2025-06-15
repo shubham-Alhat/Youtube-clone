@@ -1440,3 +1440,5 @@ _In user.controller.js_
 ### Aggregation pipelining video.
 
 #### What we basically going to do is joined the subscription schema to User schema - That's what aggregation pipeline means.
+
+9:00
