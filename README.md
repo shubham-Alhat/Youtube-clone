@@ -1441,4 +1441,230 @@ _In user.controller.js_
 
 #### What we basically going to do is joined the subscription schema to User schema - That's what aggregation pipeline means.
 
-9:00
+_user.controller.js_
+
+```javascript
+const getWatchHistory = asyncHandler(async (req, res) => {
+  const user = await User.aggregate([
+    {
+      $match: {
+        _id: new mongoose.Types.ObjectId(req.user._id),
+      },
+    },
+    {
+      $lookup: {
+        from: "videos",
+        localField: "watchHistory",
+        foreignField: "_id",
+        as: "watchHistory",
+        pipeline: [
+          {
+            $lookup: {
+              from: "users",
+              localField: "owner",
+              foreignField: "_id",
+              as: "owner",
+              pipeline: [
+                {
+                  $project: {
+                    fullName: 1,
+                    username: 1,
+                    avatar: 1,
+                  },
+                },
+              ],
+            },
+          },
+          {
+            $addFields: {
+              owner: {
+                $first: "$owner",
+              },
+            },
+          },
+        ],
+      },
+    },
+  ]);
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        user[0].watchHistory,
+        "Watch history fetched successfully"
+      )
+    );
+});
+```
+
+_Explaination_
+
+Great question, Shubham. You're looking at a **nested aggregation pipeline**, and it’s totally normal to feel confused at first—especially when `$lookup` is used _inside another `$lookup`_. Let's break it down **step-by-step**, like a real-world story.
+
+---
+
+## 🧠 Simple Explanation of What This Code Does
+
+You're trying to **get the videos a user has watched**, and for **each video**, also get info about the person who uploaded (owned) that video.
+
+Let’s walk through it like a story:
+
+---
+
+### 🧍‍♂️ Step 1: Find the User
+
+```js
+{
+  $match: {
+    _id: new mongoose.Types.ObjectId(req.user._id);
+  }
+}
+```
+
+➡️ We start by **finding the logged-in user** using `req.user._id`.
+
+Imagine you say:
+
+> "Hey MongoDB, give me the data for _this user only_."
+
+---
+
+### 🎥 Step 2: Get the Watch History Videos (First \$lookup)
+
+```js
+{
+  $lookup: {
+    from: "videos",
+    localField: "watchHistory",   // array of videoIds user watched
+    foreignField: "_id",          // match those videoIds
+    as: "watchHistory",           // store result in a new field
+    pipeline: [ ... ]
+  }
+}
+```
+
+➡️ Now you say:
+
+> "This user has a list of video IDs in `watchHistory`. Go to the `videos` collection and **find the full video data** for each of those IDs."
+
+But it doesn't stop there…
+
+---
+
+### 🧑‍💻 Step 3: For Each Video, Get the Owner Info (Second \$lookup)
+
+Inside that first `$lookup`, you have another `$lookup`:
+
+```js
+{
+  $lookup: {
+    from: "users",
+    localField: "owner",        // field in video document
+    foreignField: "_id",        // match to users
+    as: "owner",
+    pipeline: [
+      {
+        $project: {
+          fullName: 1,
+          username: 1,
+          avatar: 1
+        }
+      }
+    ]
+  }
+}
+```
+
+➡️ You're saying:
+
+> "For each video in watch history, **get the info about the uploader** (the `owner` field in the video). Then from that owner's data, keep only `fullName`, `username`, and `avatar`."
+
+---
+
+### 🧍 Step 4: Simplify the Owner Field (flatten the array)
+
+```js
+{
+  $addFields: {
+    owner: {
+      $first: "$owner";
+    }
+  }
+}
+```
+
+➡️ You're saying:
+
+> "Because `$lookup` gives an **array**, but we know there's only one owner, just pick the first one and make `owner` a normal object."
+
+So instead of:
+
+```json
+owner: [
+  { fullName: "Shubham", username: "shub", avatar: "pic.jpg" }
+]
+```
+
+You make it:
+
+```json
+owner: { fullName: "Shubham", username: "shub", avatar: "pic.jpg" }
+```
+
+---
+
+### 🏁 Final Output
+
+At the end, you're returning only this:
+
+```js
+user[0].watchHistory;
+```
+
+So your response is just the list of **video objects**, each one looking something like this:
+
+```json
+{
+  "_id": "videoId123",
+  "title": "How to build a YouTube clone",
+  "owner": {
+    "fullName": "Shubham",
+    "username": "shub",
+    "avatar": "pic.jpg"
+  }
+}
+```
+
+---
+
+## 💡 TL;DR Summary
+
+| Step | What it does                                                            |
+| ---- | ----------------------------------------------------------------------- |
+| 1️⃣   | Find the user by ID                                                     |
+| 2️⃣   | Use `$lookup` to get all videos in `watchHistory`                       |
+| 3️⃣   | For each video, use another `$lookup` to get the video's **owner** info |
+| 4️⃣   | Simplify the `owner` array into a single object using `$addFields`      |
+| ✅   | Return the processed list of video documents with owner info            |
+
+---
+
+## 🔁 Visual Flow
+
+```bash
+[User]
+  |
+  └── watchHistory: [videoId1, videoId2]
+             |
+             └── Get full video data (from videos collection)
+                       |
+                       └── For each video, get its owner (from users)
+                                 |
+                                 └── Keep only name, username, avatar
+```
+
+---
+
+Let me know if you want me to draw this as a flow diagram or help build similar queries for playlists, comments, etc. You're building a real product — this knowledge is 🔥 asset for backend mastery.
