@@ -90,7 +90,7 @@ const updateComment = asyncHandler(async (req, res) => {
 
   // check if commentId is in url
   if (!commentId) {
-    throw new ApiError(401, "comment Id not found in URL");
+    throw new ApiError(400, "comment Id not found in URL");
   }
 
   // check if content and commentID is correct
@@ -109,10 +109,54 @@ const updateComment = asyncHandler(async (req, res) => {
   if (!comment) {
     throw new ApiError(404, "comment not found");
   }
+
+  // Check ownership
+  if (comment.owner.toString() !== req.user._id.toString()) {
+    throw new ApiError(403, "You can only update your own comment");
+  }
+
+  // update and save
+  comment.content = content;
+  await comment.save({ validateBeforeSave: false });
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, comment, "comment updated successfully"));
 });
 
+// TODO: delete a comment
 const deleteComment = asyncHandler(async (req, res) => {
-  // TODO: delete a comment
+  const { commentId } = req.params;
+
+  // check comment Id in url
+  if (!commentId) {
+    throw new ApiError(400, "comment Id not found in url");
+  }
+
+  // comment ID as mongoDB object
+  if (!mongoose.Types.ObjectId.isValid(commentId)) {
+    throw new ApiError(400, "comment ID is not matched as mongoDB Object");
+  }
+
+  // find the commenyt document
+  const comment = await Comment.findById(commentId);
+
+  // if comment is there or not
+  if (!comment) {
+    throw new ApiError(404, "Comment not found");
+  }
+
+  // 4. Ownership check
+  if (comment.owner.toString() !== req.user._id.toString()) {
+    throw new ApiError(403, "You are not allowed to delete this comment");
+  }
+
+  // delete the comment
+  await comment.deleteOne();
+
+  return res
+    .status(201)
+    .json(new ApiResponse(201, {}, "comment deleted successfully"));
 });
 
 export { getVideoComments, addComment, updateComment, deleteComment };

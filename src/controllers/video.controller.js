@@ -11,9 +11,63 @@ const getAllVideos = asyncHandler(async (req, res) => {
   //TODO: get all videos based on query, sort, pagination
 });
 
+// TODO: get video, upload to cloudinary, create video
 const publishAVideo = asyncHandler(async (req, res) => {
   const { title, description } = req.body;
-  // TODO: get video, upload to cloudinary, create video
+
+  // check if title is not empty.
+  if (!title) {
+    throw new ApiError(400, "video title is required");
+  }
+  // check if description is not empty.
+  if (!description) {
+    throw new ApiError(400, "video description is required");
+  }
+
+  // get local path of video file
+  const videoLocalPath = req.files?.videoFile[0]?.path;
+
+  // check if video file is given or not
+  if (!videoLocalPath) {
+    throw new ApiError(400, "video file is required to upload a video");
+  }
+
+  // get local path of video file
+  const thumbnailLocalPath = req.files?.thumbnail[0]?.path;
+
+  // check if video file is given or not
+  if (!thumbnailLocalPath) {
+    throw new ApiError(400, "Thumbnail is required to upload a video");
+  }
+
+  // upload them on cloudinary
+  const video = await uploadOnCloudinary(videoLocalPath);
+  const thumbnail = await uploadOnCloudinary(thumbnailLocalPath);
+
+  // check if video and thumbnail upload on cloudinary
+  if (!video) {
+    throw new ApiError(500, "video is not uploaded..");
+  }
+
+  if (!thumbnail) {
+    throw new ApiError(500, "thumbnail is not uploaded..");
+  }
+
+  // after uploading on cloudinary, create a entry in db
+  const videoInfo = await Video.create({
+    videoFile: video.secure_url,
+    thumbnail: thumbnail.secure_url,
+    title,
+    description,
+    duration: video.duration,
+    owner: req.user._id,
+  });
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200, videoInfo, "video document is created successfully")
+    );
 });
 
 const getVideoById = asyncHandler(async (req, res) => {
