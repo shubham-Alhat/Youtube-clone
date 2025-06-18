@@ -6,9 +6,14 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import asyncHandler from "../utils/asyncHandler.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 
+// get all videos for feed
 const getAllVideos = asyncHandler(async (req, res) => {
-  const { page = 1, limit = 10, query, sortBy, sortType, userId } = req.query;
-  //TODO: get all videos based on query, sort, pagination
+  // GET /videos?page=2&limit=10&sortBy=views
+  // req.query.page === "2";
+  // req.query.limit === "10";
+  // req.query.sortBy === "views";
+
+  const { page = 1, limit = 10 } = req.query;
 });
 
 // TODO: get video, upload to cloudinary, create video

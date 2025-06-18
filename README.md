@@ -2099,3 +2099,161 @@ If something goes wrong:
 ---
 
 Let me know if you want a helper function to send consistent responses (like a `sendResponse()` util).
+
+### MongooseAggregatePaginate
+
+Perfect, Shubham. Let’s **keep it super clear and focused** on your use case:
+
+> 🔥 "Just fetch latest videos to feed using `mongoose-aggregate-paginate-v2`"
+
+---
+
+### ✅ Step-by-Step Guide to Use `mongoose-aggregate-paginate-v2`
+
+---
+
+## 1. 📦 Install the Package
+
+Run this in terminal:
+
+```bash
+npm install mongoose-aggregate-paginate-v2
+```
+
+---
+
+## 2. 🧠 Plug the Plugin into Your Schema
+
+Inside your video model (`video.model.js`):
+
+```js
+import mongoose, { Schema } from "mongoose";
+import mongooseAggregatePaginate from "mongoose-aggregate-paginate-v2";
+
+const videoSchema = new Schema(
+  {
+    videoFile: String,
+    thumbnail: String,
+    title: String,
+    description: String,
+    duration: Number,
+    views: { type: Number, default: 0 },
+    isPublished: { type: Boolean, default: true },
+    owner: { type: Schema.Types.ObjectId, ref: "User" },
+  },
+  { timestamps: true }
+);
+
+// 👉 Register the plugin
+videoSchema.plugin(mongooseAggregatePaginate);
+
+// 👇 Export the model
+export const Video = mongoose.model("Video", videoSchema);
+```
+
+---
+
+## 3. 🧪 Use It in Controller
+
+Your simplified `getAllVideos` function:
+
+```js
+import { Video } from "../models/video.model.js";
+
+const getAllVideos = asyncHandler(async (req, res) => {
+  const { page = 1, limit = 10 } = req.query;
+
+  // Step 1: Build aggregation pipeline
+  const aggregateQuery = Video.aggregate([
+    {
+      $match: {
+        isPublished: true,
+      },
+    },
+    {
+      $sort: {
+        createdAt: -1, // Latest videos first
+      },
+    },
+  ]);
+
+  // Step 2: Define options
+  const options = {
+    page: parseInt(page),
+    limit: parseInt(limit),
+    // populate if needed (example)
+    populate: {
+      path: "owner",
+      select: "username avatar",
+    },
+  };
+
+  // Step 3: Run aggregation with pagination
+  const videos = await Video.aggregatePaginate(aggregateQuery, options);
+
+  // Step 4: Return response
+  res.status(200).json({
+    success: true,
+    message: "Fetched all latest videos",
+    data: videos,
+  });
+});
+```
+
+---
+
+## 4. 🧪 Sample Output
+
+This is what the response will look like:
+
+```json
+{
+  "success": true,
+  "message": "Fetched all latest videos",
+  "data": {
+    "docs": [
+      {
+        "_id": "abcd123",
+        "title": "How to Code",
+        "description": "Best tutorial",
+        "owner": {
+          "_id": "user123",
+          "username": "shubham",
+          "avatar": "https://cloudinary.com/avatar.jpg"
+        },
+        "createdAt": "2024-12-05T12:00:00Z"
+      },
+      ...
+    ],
+    "totalDocs": 50,
+    "limit": 10,
+    "page": 1,
+    "totalPages": 5,
+    "hasNextPage": true,
+    "hasPrevPage": false,
+    "nextPage": 2,
+    "prevPage": null
+  }
+}
+```
+
+---
+
+## 💡 What’s Happening Behind the Scenes
+
+- You build a **MongoDB aggregation pipeline**.
+- `mongoose-aggregate-paginate-v2`:
+
+  - Adds `.skip()` and `.limit()` based on `page` and `limit`.
+  - Returns metadata like `totalPages`, `nextPage`, etc.
+  - Handles heavy lifting so your code stays clean.
+
+---
+
+### 🚀 One-Liner Recap
+
+> Install → plugin in schema → use `aggregatePaginate()` → send paginated, sorted data to frontend.
+
+---
+
+Want me to give you a **Postman test example** or make a **dummy video seed script** to test the pagination?
