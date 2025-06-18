@@ -1966,3 +1966,32 @@ Return: watchHistory videos with clean owner info
 ---
 
 Want me to turn this into a **flowchart image** or help you refactor this into **simpler functions**? Or add filters like "watch history this week only"? Let’s build next level 👊
+
+```javascript
+[
+  {
+    _id: "c1",
+    content: "Great video!",
+    video: "v1",
+    owner: {
+      // Now it's a SINGLE OBJECT (not array)
+      _id: "u1",
+      fullName: "John Doe",
+      username: "john",
+      avatar: "john.jpg",
+    },
+  },
+  {
+    _id: "c2",
+    content: "Nice work!",
+    video: "v1",
+    owner: {
+      // Single object
+      _id: "u2",
+      fullName: "Jane Smith",
+      username: "jane",
+      avatar: "jane.jpg",
+    },
+  },
+];
+```

@@ -33,9 +33,33 @@ const getVideoComments = asyncHandler(async (req, res) => {
         localField: "owner",
         foreignField: "_id",
         as: "owner",
+        pipeline: [
+          {
+            $project: {
+              fullName: 1,
+              username: 1,
+              avatar: 1,
+            },
+          },
+        ],
+      },
+    },
+    {
+      $addFields: {
+        owner: {
+          $first: "$owner",
+        },
       },
     },
   ]);
+
+  if (!comments) {
+    throw new ApiError(401, "No comments found");
+  }
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, comments, "All comments fetched successfully"));
 });
 
 const addComment = asyncHandler(async (req, res) => {
