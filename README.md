@@ -1995,3 +1995,107 @@ Want me to turn this into a **flowchart image** or help you refactor this into *
   },
 ];
 ```
+
+Absolutely Shubham. Here's a practical list of **HTTP status codes** you’ll use **99% of the time** in real-world backend development — especially in REST APIs like your YouTube clone.
+
+---
+
+## ✅ **MOST COMMON STATUS CODES** (Grouped by Use Case)
+
+---
+
+### 🔵 1. **Creating / Storing Data (POST)**
+
+| Situation                                 | Status | Meaning          |
+| ----------------------------------------- | ------ | ---------------- |
+| Created successfully                      | `201`  | **Created**      |
+| Validation failed (e.g., empty input)     | `400`  | **Bad Request**  |
+| Auth required but missing                 | `401`  | **Unauthorized** |
+| Resource conflict (e.g., duplicate email) | `409`  | **Conflict**     |
+| Authenticated but no permission           | `403`  | **Forbidden**    |
+
+---
+
+### 🟢 2. **Fetching Data (GET)**
+
+| Situation                       | Status | Meaning              |
+| ------------------------------- | ------ | -------------------- |
+| Data found and returned         | `200`  | **OK**               |
+| No data found (empty list okay) | `200`  | **OK** (still valid) |
+| Resource not found (invalid ID) | `404`  | **Not Found**        |
+
+---
+
+### 🟡 3. **Updating Data (PATCH/PUT)**
+
+| Situation                                    | Status | Meaning         |
+| -------------------------------------------- | ------ | --------------- |
+| Updated successfully                         | `200`  | **OK**          |
+| Validation or missing input                  | `400`  | **Bad Request** |
+| Trying to update something not owned by user | `403`  | **Forbidden**   |
+| Target not found (e.g., comment ID)          | `404`  | **Not Found**   |
+
+---
+
+### 🔴 4. **Deleting Data (DELETE)**
+
+| Situation                    | Status | Meaning       |
+| ---------------------------- | ------ | ------------- |
+| Deleted successfully         | `200`  | **OK**        |
+| Already deleted or not found | `404`  | **Not Found** |
+| Not authorized to delete it  | `403`  | **Forbidden** |
+
+---
+
+### 🔐 5. **Authentication / Security**
+
+| Situation                                        | Status | Meaning          |
+| ------------------------------------------------ | ------ | ---------------- |
+| Logged in / token generated                      | `200`  | **OK**           |
+| Token expired / invalid                          | `401`  | **Unauthorized** |
+| Trying to access something you're not allowed to | `403`  | **Forbidden**    |
+
+---
+
+### ⚠️ 6. **Server Errors**
+
+| Situation                      | Status | Meaning                   |
+| ------------------------------ | ------ | ------------------------- |
+| Something crashed or exception | `500`  | **Internal Server Error** |
+
+---
+
+## 🧠 Pro Tips:
+
+- Use `200` for almost all successful GET, PATCH, DELETE responses.
+- Use `201` only when you're **creating** something.
+- Use `400` if the client did something wrong (missing field, invalid type, etc.).
+- Use `401` if token is missing or invalid.
+- Use `403` if user is logged in but **not allowed** (e.g., trying to edit someone else's comment).
+- Use `500` if **your server code** broke.
+
+---
+
+## 🧪 Sample Response Structure (Good Practice)
+
+```json
+{
+  "success": true,
+  "message": "Comment added successfully",
+  "data": { ... } // or [] or null
+}
+```
+
+If something goes wrong:
+
+```json
+{
+  "success": false,
+  "message": "Video not found",
+  "error": "Invalid videoId or it may have been deleted"
+}
+```
+
+---
+
+Let me know if you want a helper function to send consistent responses (like a `sendResponse()` util).

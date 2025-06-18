@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 import { Comment } from "../models/comment.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
-import { asyncHandler } from "../utils/asyncHandler.js";
+import asyncHandler from "../utils/asyncHandler.js";
 
 const getVideoComments = asyncHandler(async (req, res) => {
   //TODO: get all comments for a video
@@ -63,11 +63,52 @@ const getVideoComments = asyncHandler(async (req, res) => {
 });
 
 const addComment = asyncHandler(async (req, res) => {
-  // TODO: add a comment to a video
+  const { videoId } = req.params;
+  const { content } = req.body;
+
+  // check if content is empty or not
+  if (!content || content.trim() === "") {
+    throw new ApiError(400, "Comment content is required");
+  }
+
+  // create new comment
+  const newComment = await Comment.create({
+    content: content,
+    video: videoId,
+    owner: req.user._id,
+  });
+
+  return res
+    .status(201)
+    .json(new ApiResponse(201, newComment, "comment added successfully"));
 });
 
+// TODO: update a comment
 const updateComment = asyncHandler(async (req, res) => {
-  // TODO: update a comment
+  const { commentId } = req.params;
+  const { content } = req.body;
+
+  // check if commentId is in url
+  if (!commentId) {
+    throw new ApiError(401, "comment Id not found in URL");
+  }
+
+  // check if content and commentID is correct
+  if (!content || content.trim() === "") {
+    throw new ApiError(400, "Comment content is required");
+  }
+
+  // check if comment Id is correct
+  if (!mongoose.Types.ObjectId.isValid(commentId)) {
+    throw new ApiError(400, "Invalid commentId - Not match as ObjectId");
+  }
+
+  const comment = await Comment.findById(commentId);
+
+  // check if comment is there or not
+  if (!comment) {
+    throw new ApiError(404, "comment not found");
+  }
 });
 
 const deleteComment = asyncHandler(async (req, res) => {
