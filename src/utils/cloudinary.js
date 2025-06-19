@@ -19,13 +19,13 @@ const uploadOnCloudinary = async (localFilePath) => {
 
     // upload file on cloudinary
     const response = await cloudinary.uploader.upload(localFilePath, {
-      resource_type: "auto",
+      resource_type: "auto", // it will automatically detect whether file is video, audio or image
     });
 
     // file has uploaded successfully
     // console.log("file uploaded successfully on cloudinary", response.url);
 
-    // after uploading successfully, unlink the files fro server BEFORE MOVING FORWARD
+    // after uploading successfully, unlink the files from server BEFORE MOVING FORWARD
     fs.unlinkSync(localFilePath); // when uploaded then it will remove and when error occured then also. IMP thing is in public/temp/.gitkeep  this file actually imp for storing the tempory files.
     return response;
   } catch (error) {
