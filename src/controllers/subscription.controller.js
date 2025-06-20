@@ -119,9 +119,72 @@ const getUserChannelSubscribers = asyncHandler(async (req, res) => {
     );
 });
 
-// controller to return channel list to which user has subscribed
+// controller to return channels list to which user has subscribed
 const getSubscribedChannels = asyncHandler(async (req, res) => {
   const { subscriberId } = req.params;
+
+  if (!subscriberId) {
+    throw new ApiError(400, "subscriber Id not found in url");
+  }
+
+  if (!mongoose.Types.ObjectId.isValid(subscriberId)) {
+    throw new ApiError(400, "Invalid Subscriber Id in url");
+  }
+
+  // aggregation pipeline
+  const subscribedChannels = await Subscription.aggregate([
+    {
+      $match: {
+        subscriber: new mongoose.Types.ObjectId(subscriberId),
+      },
+    },
+    {
+      $lookup: {
+        from: "users",
+        localField: "channel",
+        foreignField: "_id",
+        as: "channel",
+        pipeline: [
+          {
+            $project: {
+              fullName: 1,
+              username: 1,
+              avatar: 1,
+            },
+          },
+        ],
+      },
+    },
+    {
+      $addFields: {
+        channel: {
+          $first: "$channel",
+        },
+      },
+    },
+    {
+      $sort: {
+        createdAt: -1,
+      },
+    },
+  ]);
+
+  // ✅ Fixed: Check for empty array instead
+  if (!subscribedChannels || subscribedChannels.length === 0) {
+    return res
+      .status(200)
+      .json(new ApiResponse(200, [], "No subscribed channels found"));
+  }
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        subscribedChannels,
+        "All subscribed channels fetched successfully"
+      )
+    );
 });
 
 export { toggleSubscription, getUserChannelSubscribers, getSubscribedChannels };
