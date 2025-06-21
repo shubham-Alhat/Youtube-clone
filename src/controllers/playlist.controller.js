@@ -1,4 +1,4 @@
-import mongoose, { isValidObjectId } from "mongoose";
+import mongoose from "mongoose";
 import { Playlist } from "../models/playlist.model.js";
 import { Video } from "../models/video.model.js";
 import { ApiError } from "../utils/ApiError.js";
@@ -270,7 +270,50 @@ const deletePlaylist = asyncHandler(async (req, res) => {
 const updatePlaylist = asyncHandler(async (req, res) => {
   const { playlistId } = req.params;
   const { name, description } = req.body;
-  //TODO: update playlist
+
+  if (!playlistId) {
+    throw new ApiError(400, "Playlist Id not found in url");
+  }
+
+  if (!mongoose.Types.ObjectId.isValid(playlistId)) {
+    throw new ApiError(400, "Invalid playlist Id in url");
+  }
+
+  if (!name || name.trim() == "") {
+    throw new ApiError(400, "name field is required");
+  }
+
+  if (!description || description.trim() == "") {
+    throw new ApiError(400, "description field is required");
+  }
+
+  const playlist = await Playlist.findOne({
+    _id: new mongoose.Types.ObjectId(playlistId),
+    owner: req.user._id,
+  });
+
+  if (!playlist) {
+    throw new ApiError(
+      404,
+      "Playlist not found in database or You dont have permission to update the playlist"
+    );
+  }
+
+  const updatedPlaylist = await Playlist.findByIdAndUpdate(
+    playlistId,
+    { name: name.trim(), description: description.trim() },
+    { new: true }
+  );
+
+  if (!updatedPlaylist) {
+    throw new ApiError(500, "Error while updating playlist in database");
+  }
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200, updatedPlaylist, "playlist updated successfully")
+    );
 });
 
 export {
