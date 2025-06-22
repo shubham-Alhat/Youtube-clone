@@ -177,6 +177,8 @@ const getVideoById = asyncHandler(async (req, res) => {
     throw new ApiError(404, "video not found in database");
   }
 
+  await Video.findByIdAndUpdate(videoId, { $inc: { views: 1 } });
+
   return res
     .status(200)
     .json(new ApiResponse(200, video[0], "video is fetched successfully"));
